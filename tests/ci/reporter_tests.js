@@ -1,15 +1,15 @@
 var TapReporter = require('../../lib/ci/test_reporters/tap_reporter')
 var DotReporter = require('../../lib/ci/test_reporters/dot_reporter')
 var XUnitReporter = require('../../lib/ci/test_reporters/xunit_reporter')
-var BufferStream = require('../support/buffer_stream')
-var concat = require('concat-stream')
+var PassThrough = require('stream').PassThrough
+var XmlDom = require('xmldom')
 var assert = require('chai').assert
 
 describe('test reporters', function(){
 
   describe('tap reporter', function(){
     it('writes out TAP', function(){
-      var stream = BufferStream()
+      var stream = new PassThrough()
       var reporter = new TapReporter(false, stream)
       reporter.report('phantomjs', {
         name: 'it does stuff',
@@ -27,7 +27,7 @@ describe('test reporters', function(){
         logs: ["I am a log", "Useful information"]
       })
       reporter.finish()
-      assert.deepEqual(stream.lines(), [
+      assert.deepEqual(stream.read().toString().split('\n'), [
         'ok 1 phantomjs - it does stuff',
         'not ok 2 phantomjs - it fails',
         '    ---',
@@ -49,7 +49,7 @@ describe('test reporters', function(){
 
   describe('dot reporter', function(){
     it('writes out result', function(){
-      var stream = BufferStream()
+      var stream = new PassThrough()
       var reporter = new DotReporter(false, stream)
       reporter.report('phantomjs', {
         name: 'it does stuff',
@@ -58,12 +58,15 @@ describe('test reporters', function(){
         failed: 0
       })
       reporter.finish()
-      assert.match(stream.string, /  \./)
-      assert.match(stream.string, /1 tests complete \([0-9]+ ms\)/)
+      var output = stream.read().toString()
+      assert.match(output, /  \./)
+      assert.match(output, /1 tests complete \([0-9]+ ms\)/)
+
+      assertXmlIsValid(output)
     })
 
     it('writes out errors', function(){
-      var stream = BufferStream()
+      var stream = new PassThrough()
       var reporter = new DotReporter(false, stream)
       reporter.report('phantomjs', {
         name: 'it fails',
@@ -73,14 +76,15 @@ describe('test reporters', function(){
         error: new Error('it crapped out')
       })
       reporter.finish()
-      assert.match(stream.string, /it fails/)
-      assert.match(stream.string, /it crapped out/)
+      var output = stream.read().toString()
+      assert.match(output, /it fails/)
+      assert.match(output, /it crapped out/)
     })
   })
 
   describe('xunit reporter', function(){
     it('writes out and XML escapes results', function(){
-      var stream = BufferStream()
+      var stream = new PassThrough()
       var reporter = new XUnitReporter(false, stream)
       reporter.report('phantomjs', {
         name: 'it does <cool> \"cool\" \'cool\' stuff',
@@ -89,24 +93,98 @@ describe('test reporters', function(){
         failed: 0
       })
       reporter.finish()
-      assert.match(stream.string, /<testsuite name="Testem Tests" tests="1" failures="0" timestamp="(.+)" time="([0-9]+)">/)
-      assert.match(stream.string, /<testcase name="phantomjs it does &lt;cool&gt; &quot;cool&quot; &apos;cool&apos; stuff"\/>/)
+      var output = stream.read().toString()
+      assert.match(output, /<testsuite name="Testem Tests" tests="1" failures="0" timestamp="(.+)" time="([0-9]+)">/)
+      assert.match(output, /<testcase classname="phantomjs" name="it does &lt;cool> &quot;cool&quot; \'cool\' stuff"/)
+
+      assertXmlIsValid(output)
     })
     it('outputs errors', function(){
-      var stream = BufferStream()
+      var stream = new PassThrough()
       var reporter = new XUnitReporter(false, stream)
       reporter.report('phantomjs', {
         name: 'it didnt work',
-        passed: 1,
+        passed: 0,
         total: 1,
-        failed: 0,
+        failed: 1,
         error: new Error('it crapped out')
       })
       reporter.finish()
-      assert.match(stream.string, /it didnt work"><failure/)
-      assert.match(stream.string, /it crapped out/)
-      
+      var output = stream.read().toString()
+      assert.match(output, /it didnt work"/)
+      assert.match(output, /it crapped out/)
+
+      assertXmlIsValid(output)
+    })
+    it('XML escapes errors', function(){
+      var stream = new PassThrough()
+      var reporter = new XUnitReporter(false, stream)
+      reporter.report('phantomjs', {
+        name: 'it failed with quotes',
+        passed: 0,
+        total: 1,
+        failed: 1,
+        error: new Error('<it> \"crapped\" out')
+      })
+      reporter.finish()
+      var output = stream.read().toString()
+      assert.match(output, /it failed with quotes"/)
+      assert.match(output, /&lt;it> &quot;crapped&quot; out/)
+
+      assertXmlIsValid(output)
+    })
+    it('XML escapes messages', function(){
+      var stream = new PassThrough()
+      var reporter = new XUnitReporter(false, stream)
+      reporter.report('phantomjs', {
+        name: 'it failed with ampersands',
+        passed: 0,
+        total: 1,
+        failed: 1,
+        error: { message: "&&" }
+      })
+      reporter.finish()
+      var output = stream.read().toString()
+      assert.match(output, /it failed with ampersands"/)
+      assert.match(output, /&amp;&amp;/)
+
+      assertXmlIsValid(output)
+    })
+    it('presents valid XML with null messages', function(){
+      var stream = new PassThrough()
+      var reporter = new XUnitReporter(false, stream)
+      reporter.report('phantomjs', {
+        name: 'null',
+        passed: 0,
+        total: 1,
+        failed: 1,
+        error: { message: null }
+      })
+      reporter.finish()
+      var output = stream.read().toString()
+
+      assertXmlIsValid(output)
     })
   })
+
+var assertXmlIsValid = function(xmlString) {
+  var failure = null;
+  var parser = new XmlDom.DOMParser({
+    errorHandler:{
+      locator:{},
+      warning: function(txt) { failure = txt; },
+      error: function(txt) { failure = txt; },
+      fatalError: function(txt) { failure = txt; }
+    }
+  })
+
+  // this will throw into failure variable with invalid xml
+  parser.parseFromString(xmlString,'text/xml')
+
+  if (failure)
+  {
+    assert(false, failure+'\n---\n'+xmlString+'\n---\n')
+  }
+}
 
 })

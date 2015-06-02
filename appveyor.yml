@@ -1,0 +1,28 @@
+# http://www.appveyor.com/docs/appveyor-yml
+
+# Test against these versions of Node.js.
+environment:
+  matrix:
+  - PHANTOM_SRC: "npm"
+  - PHANTOM_SRC: "chocolatey"
+
+# Install scripts. (runs after repo cloning)
+install:
+  # Get the latest stable version of Node
+  - ps: Install-Product node 0.12
+  - npm version
+  - npm install
+  # Install PhantomJS
+  - IF %PHANTOM_SRC%==npm npm install -g phantomjs
+  - IF %PHANTOM_SRC%==chocolatey cinst PhantomJS -y
+  - phantomjs -v
+
+# Post-install test scripts.
+test_script:
+  - cmd: npm test
+
+# Don't actually build.
+build: off
+
+# Set build version format here instead of in the admin panel.
+version: "{build}"

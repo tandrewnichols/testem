@@ -1,23 +1,23 @@
 Got Scripts? Test&rsquo;em!
 =================
 
-[![Build Status](https://secure.travis-ci.org/airportyh/testem.png)](http://travis-ci.org/airportyh/testem) [![Dependency Status](https://david-dm.org/airportyh/testem.svg)](https://david-dm.org/airportyh/testem)
+[![Build Status](https://travis-ci.org/airportyh/testem.svg?branch=master)](https://travis-ci.org/airportyh/testem) [![Dependency Status](https://david-dm.org/airportyh/testem.svg)](https://david-dm.org/airportyh/testem) [![npm version](https://badge.fury.io/js/testem.svg)](http://badge.fury.io/js/testem) [![Windows build status](https://ci.appveyor.com/api/projects/status/l948rc4rv391ayge/branch/master?svg=true)](https://ci.appveyor.com/project/johanneswuerbach/testem/branch/master)
 
-Unit testing in Javascript can be tedious and painful, but Testem makes it so easy that you will actually *want* to write tests. 
+Unit testing in Javascript can be tedious and painful, but Testem makes it so easy that you will actually *want* to write tests.
 
 Features
 --------
 
 * Test-framework agnostic. Support for
-    - [Jasmine](http://pivotal.github.com/jasmine/)
+    - [Jasmine](http://jasmine.github.io/)
     - [QUnit](http://qunitjs.com/)
     - [Mocha](http://mochajs.org/)
     - [Buster.js](http://docs.busterjs.org/)
-    - Others, through custom test framework adapters. 
+    - Others, through custom test framework adapters.
 * Run tests in all major browsers as well as [Node](http://nodejs.org) and [PhantomJS](http://phantomjs.org/)
-* Two distinct use-cases: 
+* Two distinct use-cases:
     - Test-Driven-Development(TDD) &mdash; designed to streamline the TDD workflow
-    - Continuous Integration(CI) &mdash; designed to work well with popular CI servers like Jenkins or Teamcity 
+    - Continuous Integration(CI) &mdash; designed to work well with popular CI servers like Jenkins or Teamcity
 * Cross-platform support
     - OS X
     - Windows
@@ -38,12 +38,12 @@ Screencasts
 
 Installation
 ------------
-You need [Node](http://nodejs.org/) version 0.6.2 or later installed on your system. Node is extremely easy to install and has a small footprint, and is really awesome otherwise too, so [just do it](http://nodejs.org/).
+You need [Node](http://nodejs.org/) version 0.10+ or iojs installed on your system. Node is extremely easy to install and has a small footprint, and is really awesome otherwise too, so [just do it](http://nodejs.org/).
 
 Once you have Node installed:
 
     npm install testem -g
-    
+
 This will install the `testem` executable globally on your system.
 
 Usage
@@ -57,15 +57,15 @@ Development Mode
 The simplest way to use Testem, in the TDD spirit, is to start in an empty directory and run the command
 
     testem
-    
+
 You will see a terminal-based interface which looks like this
-    
+
 ![Initial interface](https://github.com/airportyh/testem/raw/master/images/initial.png)
-    
+
 Now open your browser and go to the specified URL. You should now see
 
 ![Zero of zero](https://github.com/airportyh/testem/raw/master/images/zeros.png)
-    
+
 We see 0/0 for tests because at this point we haven't written any code. As we write them, Testem will pick up any `.js` files
 that were added, include them, and if there are tests, run them automatically. So let's first write `hello_spec.js` in the spirit of "test first"(written in Jasmine)
 
@@ -75,7 +75,7 @@ describe('hello', function(){
     expect(hello()).toBe('hello world');
   });
 });
-```    
+```
 Save that file and now you should see
 
 ![Red](https://github.com/airportyh/testem/raw/master/images/red.png)
@@ -91,7 +91,7 @@ function hello(){
 So you should now see
 
 ![Green](https://github.com/airportyh/testem/raw/master/images/green.png)
-    
+
 ### Using the Text User Interface
 
 In development mode, Testem has a text-based graphical user interface which uses keyboard-based controls. Here is a list of the control keys
@@ -120,7 +120,7 @@ Continuous Integration Mode
 To use Testem for continuous integration
 
     testem ci
-    
+
 In CI mode, Testem runs your tests on all the browsers that are available on the system one after another.
 
 You can run multiple browsers in parallel in CI mode by specifying the `--parallel` (or `-P`) option to be the number of concurrent running browsers.
@@ -130,11 +130,11 @@ You can run multiple browsers in parallel in CI mode by specifying the `--parall
 To find out what browsers are currently available - those that Testem knows about and can make use of
 
     testem launchers
-    
+
 Will print them out. The output might look like
 
     $ testem launchers
-    Browsers available on this system: 
+    Browsers available on this system:
     IE7
     IE8
     IE9
@@ -143,7 +143,7 @@ Will print them out. The output might look like
     Safari
     Opera
     PhantomJS
-    
+
 Did you notice that this system has IE versions 7-9? Yes, actually it has only IE9 installed, but Testem uses IE's compatibility mode feature to emulate IE 7 and 8.
 
 When you run `testem ci` to run tests, it outputs the results in the [TAP](http://testanything.org/) format by default, which looks like
@@ -155,7 +155,7 @@ When you run `testem ci` to run tests, it outputs the results in the [TAP](http:
     # pass  1
 
     # ok
-    
+
 TAP is a human-readable and language-agnostic test result format. TAP plugins exist for popular CI servers
 
 * [Jenkins TAP plugin](https://wiki.jenkins-ci.org/display/JENKINS/TAP+Plugin) - I've added [detailed instructions](https://github.com/airportyh/testem/blob/master/docs/use_with_jenkins.md) for setup with Jenkins.
@@ -163,16 +163,47 @@ TAP is a human-readable and language-agnostic test result format. TAP plugins ex
 
 ## Other Test Reporters
 
-Testem has other test reporters than TAP: `dot` and `xunit`. You can use the `-R` to specify them
+Testem has other test reporters than TAP: `dot`, `xunit` and `teamcity`. You can use the `-R` to specify them
 
     testem ci -R dot
+
+### Example xunit reporter output
+
+Note that the real output is not pretty printed.
+```xml
+<testsuite name="Testem Tests" tests="4" failures="1" timestamp="Wed Apr 01 2015 11:56:20 GMT+0100 (GMT Daylight Time)" time="9">
+  <testcase classname="PhantomJS 1.9" name="myFunc returns true when input is valid" time="0"/>
+  <testcase classname="PhantomJS 1.9" name="myFunc returns false when user tickles it" time="0"/>
+  <testcase classname="Chrome" name="myFunc returns true when input is valid" time="0"/>
+  <testcase classname="Chrome" name="myFunc returns false when user tickles it" time="0">
+    <failure name="myFunc returns false when user tickles it" message="function is not ticklish">
+      <![CDATA[
+      Callstack...
+      ]]>
+    </failure>
+  </testcase>
+</testsuite>
+```
+
+### Example teamcity reporter output
+
+    ##teamcity[testStarted name='PhantomJS 1.9 - hello should say hello']
+    ##teamcity[testFinished name='PhantomJS 1.9 - hello should say hello']
+    ##teamcity[testStarted name='PhantomJS 1.9 - hello should say hello to person']
+    ##teamcity[testFinished name='PhantomJS 1.9 - hello should say hello to person']
+    ##teamcity[testStarted name='PhantomJS 1.9 - goodbye should say goodbye']
+    ##teamcity[testFailed name='PhantomJS 1.9 - goodbye should say goodbye' message='expected |'hello world|' to equal |'goodbye world|'' details='AssertionError: expected |'hello world|' to equal |'goodbye world|'|n    at http://localhost:7357/testem/chai.js:873|n    at assertEqual (http://localhost:7357/testem/chai.js:1386)|n    at http://localhost:7357/testem/chai.js:3627|n    at http://localhost:7357/hello_spec.js:14|n    at callFn (http://localhost:7357/testem/mocha.js:4338)|n    at http://localhost:7357/testem/mocha.js:4331|n    at http://localhost:7357/testem/mocha.js:4728|n    at http://localhost:7357/testem/mocha.js:4819|n    at next (http://localhost:7357/testem/mocha.js:4653)|n    at http://localhost:7357/testem/mocha.js:4663|n    at next (http://localhost:7357/testem/mocha.js:4601)|n    at http://localhost:7357/testem/mocha.js:4630|n    at timeslice (http://localhost:7357/testem/mocha.js:5761)']
+    ##teamcity[testFinished name='PhantomJS 1.9 - goodbye should say goodbye']
+
+    ##teamcity[testSuiteFinished name='mocha.suite' duration='11091']
+
 
 ### Command line options
 
 To see all command line options for CI
 
     testem ci --help
-    
+
 Configuration File
 ------------------
 
@@ -225,13 +256,13 @@ You can also use a custom page for testing. To do this, first you need to specif
 {
   "test_page": "tests.html"
 }
-```  
+```
 
 Next, the test page you use needs to have the adapter code installed on them, as specified in the next section.
 
 ### Include Snippet
 
-Include this snippet directly after your `jasmine.js`, `qunit.js` or `mocha.js` or `buster.js` include to enable *Testem* with your test page. 
+Include this snippet directly after your `jasmine.js`, `qunit.js` or `mocha.js` or `buster.js` include to enable *Testem* with your test page.
 
 ```html
 <script src="/testem.js"></script>
@@ -265,10 +296,10 @@ This will display something like the following
 
     Launcher      Type          CI  Dev
     ------------  ------------  --  ---
-    Chrome        browser       ✔           
-    Firefox       browser       ✔           
-    Safari        browser       ✔           
-    Opera         browser       ✔           
+    Chrome        browser       ✔
+    Firefox       browser       ✔
+    Safari        browser       ✔
+    Opera         browser       ✔
     Mocha         process(TAP)  ✔
 
 This displays the current list of launchers that are available. Launchers can launch either a browser or a custom process &mdash; as shown in the "Type" column. Custom launchers can be defined to launch custom processes. The "CI" column indicates the launchers which will be automatically launch in CI-mode. Similarly, the "Dev" column those that will automatically launch in dev-mode.
@@ -296,7 +327,7 @@ If your process outputs test results in [TAP](http://en.wikipedia.org/wiki/Test_
 ```javascript
 "launchers": {
   "Mocha": {
-    "command": "mocha tests/*_tests.js -R tap"
+    "command": "mocha tests/*_tests.js -R tap",
     "protocol": "tap"
   }
 }
@@ -318,7 +349,7 @@ If you want to debug tests in PhantomJS, include the `phantomjs_debug_port` opti
 Preprocessors (CoffeeScript, LESS, Sass, Browserify, etc)
 ---------------------------------------------------------
 
-If you need to run a preprocessor (or indeed any shell command before the start of the tests) use the `before_tests` option, such as 
+If you need to run a preprocessor (or indeed any shell command before the start of the tests) use the `before_tests` option, such as
 
     "before_tests": "coffee -c *.coffee"
 
@@ -402,19 +433,21 @@ Simply add a `proxies` section to the `testem.json` configuration file.
 {
   "proxies": {
     "/api": {
-      "port": 4200,
-      "host": "localhost"
+      "target": "http://localhost:4200",
+      "onlyContentTypes": ["xml", "json"]
     },
     "/xmlapi": {
-      "port": 8000,
-      "host": "localhost"
+      "target": "https://localhost:8000",
+      "secure": false
     }
   }
 }
 ```
 
 This functionality is implemented as a *transparent proxy* hence a request to
-`http://localhost:7357/api/posts.json` will be proxied to `http://localhost:4200/api/posts.json` without removing the `/api` prefix.
+`http://localhost:7357/api/posts.json` will be proxied to `http://localhost:4200/api/posts.json` without removing the `/api` prefix. Other available options can be found here: https://github.com/nodejitsu/node-http-proxy#options
+
+To limit the functionality to only certain content types, use "onlyContentTypes".
 
 Example Projects
 ----------------
@@ -451,7 +484,7 @@ Known Issues
 Contributing
 ------------
 
-If you want to [contribute to the project](https://github.com/airportyh/testem/blob/master/CONTRIBUTING.md), I am going to do my best to stay out of your way. 
+If you want to [contribute to the project](https://github.com/airportyh/testem/blob/master/CONTRIBUTING.md), I am going to do my best to stay out of your way.
 
 Roadmap
 -------
@@ -463,6 +496,7 @@ Contributors
 ------------
 
 * [Toby Ho](https://github.com/airportyh)
+* [Johannes Würbach](https://github.com/johanneswuerbach)
 * [Raynos](https://github.com/Raynos)
 * [Derek Brans](https://github.com/dbrans)
 
@@ -476,7 +510,7 @@ Credits
 
 Testem depends on these great software
 
-* [Jasmine](http://pivotal.github.com/jasmine/)
+* [Jasmine](http://jasmine.github.io/)
 * [QUnit](http://code.google.com/p/jqunit/)
 * [Mocha](http://mochajs.org/)
 * [Node](http://nodejs.org/)

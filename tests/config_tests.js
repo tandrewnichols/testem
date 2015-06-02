@@ -1,11 +1,10 @@
 var Config = require('../lib/config.js')
-var test = require('./testutils.js')
-var EventEmitter = require('events').EventEmitter
-var expect = test.expect
+var expect = require('chai').expect
 var bd = require('bodydouble')
 var stub = bd.stub
-var browser_launcher = require('../lib/browser_launcher')
+var browserLauncher = require('../lib/browser_launcher')
 var assert = require('chai').assert
+var path = require('path')
 
 describe('Config', function(){
 	var config, appMode, progOptions
@@ -20,7 +19,7 @@ describe('Config', function(){
 	afterEach(function(){
 		bd.restoreStubs()
 	})
-	
+
 	it('can create', function(){
 		expect(config.progOptions).to.equal(progOptions)
 	})
@@ -58,7 +57,7 @@ describe('Config', function(){
 		var config = new Config
 		assert.equal(config.get('url'), 'http://localhost:7357/')
 	})
-	
+
 	describe('read json config file', function(){
 		var config
 		beforeEach(function(done){
@@ -96,7 +95,7 @@ describe('Config', function(){
 			done()
 		})
 	})
-	
+
 	it('returns whether isCwdMode (read js files from current dir)', function(){
 		stub(config, 'get', function(key){
 			return null
@@ -119,28 +118,28 @@ describe('Config', function(){
 		assert.equal(config.get('host'), 'localhost')
 		assert.equal(config.get('port'), 7357)
 	})
-	
+
 	it('should getLaunchers should call getAvailable browsers', function(done){
-		stub(config, 'getWantedLaunchers', function(n){return n})
-		var getAvailableBrowsers = browser_launcher.getAvailableBrowsers
-		browser_launcher.getAvailableBrowsers = function(cb){
+		stub(config, 'getWantedLaunchers', function(n, cb){return cb(null, n)})
+		var getAvailableBrowsers = browserLauncher.getAvailableBrowsers
+		browserLauncher.getAvailableBrowsers = function(cb){
 			cb([
 				{name: 'Chrome', exe: 'chrome.exe'},
 				{name: 'Firefox'}
 			])
 		}
-		
-		config.getLaunchers(function(launchers){
+
+		config.getLaunchers(function(err, launchers){
 			expect(launchers.chrome.name).to.equal('Chrome')
 			expect(launchers.chrome.settings.exe).to.equal('chrome.exe')
 			expect(launchers.firefox.name).to.equal('Firefox')
-			browser_launcher.getAvailableBrowsers = getAvailableBrowsers
+			browserLauncher.getAvailableBrowsers = getAvailableBrowsers
 			done()
 		})
 	})
 
 	it('should install custom launchers', function(done){
-		stub(config, 'getWantedLaunchers', function(n){return n})
+		stub(config, 'getWantedLaunchers', function(n, cb){return cb(null, n)})
 		config.config = {
 			launchers: {
 				Node: {
@@ -148,24 +147,25 @@ describe('Config', function(){
 				}
 			}
 		}
-		var getAvailableBrowsers = browser_launcher.getAvailableBrowsers
-		browser_launcher.getAvailableBrowsers = function(cb){cb([])}
-		config.getLaunchers(function(launchers){
+		var getAvailableBrowsers = browserLauncher.getAvailableBrowsers
+		browserLauncher.getAvailableBrowsers = function(cb){cb([])}
+		config.getLaunchers(function(err, launchers){
 			expect(launchers.node.name).to.equal('Node')
 			expect(launchers.node.settings.command).to.equal('node tests.js')
-			browser_launcher.getAvailableBrowsers = getAvailableBrowsers
+			browserLauncher.getAvailableBrowsers = getAvailableBrowsers
 			done()
 		})
 	})
-	
-	it('getWantedLaunchers uses getWantedLauncherNames', function(){
-		stub(config, 'getWantedLauncherNames').returns(['Chrome', 'Firefox'])
-		var results = config.getWantedLaunchers({
-			chrome: { name: 'Chrome' }
-			, firefox: { name: 'Firefox' }
-		})
-		expect(results).to.deep.equal([{ name: 'Chrome' }, { name: 'Firefox' }])
 
+	it('getWantedLaunchers uses getWantedLauncherNames', function(done){
+		stub(config, 'getWantedLauncherNames').returns(['Chrome', 'Firefox'])
+		config.getWantedLaunchers({
+			chrome: { name: 'Chrome' },
+			firefox: { name: 'Firefox' }
+		}, function(err, results) {
+			expect(results).to.deep.equal([{ name: 'Chrome' }, { name: 'Firefox' }])
+			done()
+		})
 	})
 
 	describe('getWantedLauncherNames', function(){
@@ -196,7 +196,7 @@ describe('Config', function(){
 	}
 
 	describe('getSrcFiles', function(){
-		
+
 		beforeEach(function(){
 			config.set('cwd', 'tests')
 		})
@@ -219,7 +219,7 @@ describe('Config', function(){
 			config.set('src_files_ignore', ['**/*.sh'])
 			config.getSrcFiles(function(err, files){
 				expect(files).to.deep.equal([
-					fileEntry('integration/browser_tests.bat')])
+					fileEntry('integration' + path.sep + 'browser_tests.bat')])
 				done()
 			})
 		})
@@ -245,7 +245,7 @@ describe('Config', function(){
 			])
 			config.getSrcFiles(function(err, files){
 				expect(files).to.deep.equal([
-					fileEntry('integration/browser_tests.bat')
+					fileEntry('integration' + path.sep + 'browser_tests.bat')
 				])
 				done()
 			})
@@ -267,8 +267,8 @@ describe('Config', function(){
 			config.getSrcFiles(function(err, files){
 				expect(files).to.deep.equal([
 					fileEntry('config_tests.js', ['data-foo="true"', 'data-bar']),
-					fileEntry('integration/browser_tests.bat'),
-					fileEntry('integration/browser_tests.sh')
+					fileEntry('integration' + path.sep + 'browser_tests.bat'),
+					fileEntry('integration' + path.sep + 'browser_tests.sh')
 				])
 				done()
 			})
@@ -282,7 +282,7 @@ describe('Config', function(){
 			config.getSrcFiles(function(err, files){
 				expect(files).to.deep.equal([
 					fileEntry('config_tests.js', ['data-foo="true"', 'data-bar']),
-					fileEntry('integration/browser_tests.bat')
+					fileEntry('integration' + path.sep + 'browser_tests.bat')
 				])
 				done()
 			})
@@ -293,8 +293,8 @@ describe('Config', function(){
 			])
 			config.getSrcFiles(function(err, files){
 				expect(files).to.deep.equal([
-					fileEntry('integration/browser_tests.bat'),
-					fileEntry('integration/browser_tests.sh'),
+					fileEntry('integration' + path.sep + 'browser_tests.bat'),
+					fileEntry('integration' + path.sep + 'browser_tests.sh'),
 					fileEntry('http://codeorigin.jquery.com/jquery-2.0.3.min.js')
 				])
 				done()
@@ -326,24 +326,24 @@ function mockTopLevelProgOptions(){
 		{ name: function(){ return 'timeout' } }
 	]
 	var commands = [
-		{ name: function(){ return 'ci' } }
-		, { name: function(){ return 'launchers' } }
+		{ name: function(){ return 'ci' } },
+		{ name: function(){ return 'launchers' } }
 	]
 	var parentOptions = {
-		port: 8081
-		, options: [
-			{name: function(){ return 'port' }}
-			, { name: function(){ return 'launcher' } }
-		]
-		, cwd: 'tests'
+		port: 8081,
+		options: [
+			{name: function(){ return 'port' }},
+			{name: function(){ return 'launcher' }}
+		],
+		cwd: 'tests'
 	}
 	var progOptions = {
-		timeout: 2
-		, parent: parentOptions
-		, __proto__: parentOptions
-		, options: options
-		, commands: commands
-		, _events: []
+		timeout: 2,
+		parent: parentOptions,
+		__proto__: parentOptions,
+		options: options,
+		commands: commands,
+		_events: []
 	}
 	return progOptions
 }
@@ -352,7 +352,7 @@ describe('getTemplateData', function(){
 	it('should give templateData', function(done){
 		var fileConfig = {
 			src_files: [
-				"web/*.js",
+				"web/*.js"
 			]
 		}
 		var progOptions = mockTopLevelProgOptions()
