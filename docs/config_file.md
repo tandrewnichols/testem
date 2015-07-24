@@ -7,6 +7,7 @@ This document will go into more detail about the Testem configuration file and l
 * `.testem.json`
 * `testem.yml`
 * `.testem.yml`
+* `testem.js`
 
 The file is looked for in the user's current directory.
 
@@ -22,6 +23,19 @@ Here's an example `testem.json` file
             "tests/*_tests.js"
         ]
     }
+
+Here's an example `testem.js` file that defines a [custom reporter](custom_reporter.md):
+
+    var CustomReporter = require('./my-custom-reporter');
+    module.exports = {
+        "framework": "mocha",
+        "src_files": [
+            "src/*.js",
+            "tests/*_tests.js"
+        ]
+        "reporter": new CustomReporter()
+    };
+
 
 Common Configuration Options
 ----------------------------
@@ -48,25 +62,26 @@ Common Configuration Options
 
 ### Config-level options:
 
-    launchers:              [Object]  a specification for all custom launchers
-    launch_in_dev:          [Array]   list of launchers to use for dev runs
-    launch_in_ci:           [Array]   list of launchers to use for CI runs
-    timeout:                [Number]  timeout for a browser
-    framework:              [String]  test framework to use
-    url:                    [String]  url server runs at (http://{host}:{port}/)
-    src_files:              [Array]   list of files or file patterns to use
-    src_files_ignore:       [Array]   list of files or file patterns to exclude from usage
-    serve_files:            [Array]   list of files or file patterns to inject into test playground (defaults to src_files)
-    serve_files_ignore:     [Array]   list of files or file patterns to exclude from test playground (defaults to src_files_ignore)
-    watch_files:            [Array]   list of files or file patterns to watch changes of (defaults to src_files)
-    css_files:              [Array]   additionals stylesheets to include
-    cwd:                    [Path]    directory to use as root
-    parallel:               [Number]  max number of parallel runners (1)
-    routes:                 [Object]  overrides for assets paths
-    fail_on_zero_tests:     [Boolean] whether process should exit with error status when no tests found  
-    unsafe_file_serving:    [Boolean] allow serving directories that are not in your CWD (false)
-    reporter:               [String]  name of the reporter to be used in ci mode (tap, xunit, dot)
-    disable_watching:       [Boolean] disable any file watching
+    launchers:                [Object]  a specification for all custom launchers
+    launch_in_dev:            [Array]   list of launchers to use for dev runs
+    launch_in_ci:             [Array]   list of launchers to use for CI runs
+    timeout:                  [Number]  timeout for a browser
+    framework:                [String]  test framework to use
+    url:                      [String]  url server runs at (http://{host}:{port}/)
+    src_files:                [Array]   list of files or file patterns to use
+    src_files_ignore:         [Array]   list of files or file patterns to exclude from usage
+    serve_files:              [Array]   list of files or file patterns to inject into test playground (defaults to src_files)
+    serve_files_ignore:       [Array]   list of files or file patterns to exclude from test playground (defaults to src_files_ignore)
+    watch_files:              [Array]   list of files or file patterns to watch changes of (defaults to src_files)
+    css_files:                [Array]   additionals stylesheets to include
+    cwd:                      [Path]    directory to use as root
+    parallel:                 [Number]  max number of parallel runners (1)
+    routes:                   [Object]  overrides for assets paths
+    fail_on_zero_tests:       [Boolean] whether process should exit with error status when no tests found  
+    unsafe_file_serving:      [Boolean] allow serving directories that are not in your CWD (false)
+    reporter:                 [String]  name of the reporter to be used in ci mode (tap, xunit, dot)
+    disable_watching:         [Boolean] disable any file watching
+    ignore_missing_launchers: [Boolean] ignore missing launchers in ci mode
 
 
 ### Available hooks:
