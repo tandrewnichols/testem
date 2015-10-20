@@ -7,7 +7,7 @@
     "unittest",
     "browser"
   ],
-  "version": "0.9.0",
+  "version": "0.9.8",
   "author": "Toby Ho <airportyh@gmail.com>",
   "repository": {
     "type": "git",
@@ -39,8 +39,9 @@
     "mkdirp": "^0.5.0",
     "mustache": "^2.0.0",
     "npmlog": "^1.0.0",
+    "printf": "^0.2.3",
     "rimraf": "^2.2.8",
-    "socket.io": "^1.3.6",
+    "socket.io": "^1.3.7",
     "styled_string": "0.0.1",
     "tap-parser": "^1.1.3",
     "xmldom": "^0.1.19"
@@ -60,7 +61,7 @@
   },
   "devDependencies": {
     "bodydouble": "^0.1.2",
-    "browserify": "^10.2.4",
+    "browserify": "^11.0.0",
     "chai": "^3.0.0",
     "cheerio": "^0.19.0",
     "concat-stream": "^1.4.7",
@@ -70,7 +71,7 @@
     "request": "^2.51.0",
     "sinon": "^1.12.2",
     "tape": "^4.0.0",
-    "tmp": "0.0.26"
+    "tmp": "0.0.27"
   },
   "bin": {
     "testem": "./testem.js"

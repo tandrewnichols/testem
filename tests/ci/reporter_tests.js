@@ -44,81 +44,53 @@ describe('test reporters', function(){
   })
 
   describe('dot reporter', function(){
-    it('writes out summary', function(){
-      var stream = new PassThrough()
-      var reporter = new DotReporter(false, stream)
-      reporter.report('phantomjs', {
-        name: 'it does stuff',
-        passed: true,
-        logs: []
+    context('without errors', function(){
+      it('writes out summary', function(){
+        var stream = new PassThrough()
+        var reporter = new DotReporter(false, stream)
+        reporter.report('phantomjs', {
+          name: 'it does stuff',
+          passed: true,
+          logs: []
+        })
+        reporter.finish()
+        var output = stream.read().toString()
+        assert.match(output, /  \./)
+        assert.match(output, /1 tests complete \([0-9]+ ms\)/)
       })
-      reporter.finish()
-      var output = stream.read().toString()
-      assert.match(output, /  \./)
-      assert.match(output, /1 tests complete \([0-9]+ ms\)/)
     })
 
-    it('writes out message and actual/expected', function(){
-      var stream = new PassThrough()
-      var reporter = new DotReporter(false, stream)
-      reporter.report('phantomjs', {
-        name: 'it fails',
-        passed: false,
-        error: {
-          actual: 'Seven',
-          expected: 7,
-          message: 'This should be a number'
-        }
-      })
-      reporter.finish()
-      var output = stream.read().toString()
-      assert.match(output, /  F/)
-      assert.match(output, /1 tests complete \([0-9]+ ms\)/)
-      assert.match(output, /message: >\s+This should be a number/)
-      assert.match(output, /actual: >\s+Seven/)
-      assert.match(output, /expected: >\s+7/)
-    })
+    context('with errors', function(){
+      it('writes out summary with failure info', function(){
+        var stream = new PassThrough()
+        var reporter = new DotReporter(false, stream)
+        reporter.report('phantomjs', {
+          name: 'it fails',
+          passed: false,
+          error: {
+            actual: 'Seven',
+            expected: 7,
+            message: 'This should be a number',
+            stack: 'trace'
+          }
+        })
+        reporter.finish()
+        var output = stream.read().toString().split('\n')
 
-    it('mutes message if there is none', function(){
-      var stream = new PassThrough()
-      var reporter = new DotReporter(false, stream)
-      reporter.report('phantomjs', {
-        name: 'it fails',
-        passed: false,
-        error: {
-          actual: 'Seven',
-          expected: 7
-        }
+        output.shift()
+        assert.match(output.shift(), /  F/)
+        output.shift()
+        assert.match(output.shift(), /  1 tests complete \(\d+ ms\)/)
+        output.shift()
+        assert.match(output.shift(), /  1\) \[phantomjs\] it fails/)
+        assert.match(output.shift(), /     This should be a number/)
+        output.shift()
+        assert.match(output.shift(), /     expected: 7/)
+        assert.match(output.shift(), /       actual: 'Seven'/)
+        output.shift()
+        assert.match(output.shift(), /     trace/)
+        assert.equal(output, '')
       })
-      reporter.finish()
-      var output = stream.read().toString()
-      assert.notMatch(output, /message: >/)
-
-      assert.match(output, /  F/)
-      assert.match(output, /1 tests complete \([0-9]+ ms\)/)
-      assert.match(output, /actual: >\s+Seven/)
-      assert.match(output, /expected: >\s+7/)
-    })
-
-    it('mutes actual/expected if there is none', function(){
-      var stream = new PassThrough()
-      var reporter = new DotReporter(false, stream)
-      var stacktrace = (new Error('test blew up')).stack
-      reporter.report('phantomjs', {
-        name: 'it fails',
-        passed: false,
-        error: {
-          actual: null,
-          message: stacktrace
-        }
-      })
-      reporter.finish()
-      var output = stream.read().toString()
-      assert.match(output, /  F/)
-      assert.match(output, /1 tests complete \([0-9]+ ms\)/)
-      assert.match(output, /message: >\s+Error: test blew up/)
-      assert.notMatch(output, /actual: >/)
-      assert.notMatch(output, /expected: >/)
     })
   })
 
@@ -136,6 +108,42 @@ describe('test reporters', function(){
       assert.match(output, /<testcase classname="phantomjs" name="it does &lt;cool> &quot;cool&quot; \'cool\' stuff"/)
 
       assertXmlIsValid(output)
+    })
+
+    it('uses stdout to print intermediate test results when intermediate output is enabled', function() {
+      var stream = new PassThrough()
+      var reporter = new XUnitReporter(false, stream, true)
+      var displayed = false
+      var write = process.stdout.write
+      process.stdout.write = function(string, encoding, fd) {
+        write.apply(process.stdout, [string, encoding, fd])
+        displayed = true
+      }
+      reporter.report('phantomjs', {
+        name: 'it does stuff',
+        passed: true,
+        logs: []
+      })
+      assert(displayed)
+      process.stdout.write = write
+    })
+
+    it('does not print intermediate test results when intermediate output is disabled', function() {
+      var stream = new PassThrough()
+      var reporter = new XUnitReporter(false, stream, false)
+      var displayed = false
+      var write = process.stdout.write
+      process.stdout.write = function(string, encoding, fd) {
+        write.apply(process.stdout, [string, encoding, fd])
+        displayed = true
+      }
+      reporter.report('phantomjs', {
+        name: 'it does stuff',
+        passed: true,
+        logs: []
+      })
+      assert(!displayed)
+      process.stdout.write = write
     })
 
     it('outputs errors', function(){
